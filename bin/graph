@@ -1,0 +1,73 @@
+#!/bin/bash
+
+if ! command -v jq &> /dev/null; then
+    printf "Installing jq...\n"
+    brew install jq &> /dev/null
+fi
+
+if ! command -v dot &> /dev/null; then
+    printf "Installing graphviz...\n"
+    brew install graphviz &> /dev/null
+fi
+
+get_color() {
+    local pkg=$1
+    if [[ $pkg == core* ]]; then
+        echo "blue"
+    elif [[ $pkg == feature-* ]]; then
+        echo "pink"
+    elif [[ $pkg == service-* ]]; then
+        echo "lightgreen"
+    else
+        echo "lightgrey"
+    fi
+}
+
+get_dependencies() {
+    local package_name=$1
+    local package_json="packages/$package_name/package.json"
+
+    local deps=$(jq -r '.dependencies | to_entries[] | select(.key | startswith("@airplane-mode/")) | .key' "$package_json" 2>/dev/null | sed 's/@airplane-mode\///')
+    local dev_deps=$(jq -r '.devDependencies | to_entries[] | select(.key | startswith("@airplane-mode/")) | .key' "$package_json" 2>/dev/null | sed 's/@airplane-mode\///')
+
+    echo "$deps"$'\n'"$dev_deps" | grep . || true
+}
+
+build_dot() {
+    local dot_file="assets/dependency-graph.dot"
+
+    # Start DOT file
+    cat > "$dot_file" << EOL
+digraph dependencies {
+    rankdir=LR;
+    bgcolor="black";
+    node [shape=box, style=filled, fontname="monospace"];
+    edge [color=white, arrowhead=dot, penwidth=2];
+EOL
+
+    # Get all packages except those starting with config
+    local packages=$(ls packages | grep -v '^config')
+
+    # Process each package
+    for pkg in $packages; do
+        local color=$(get_color "$pkg")
+        echo "    \"$pkg\" [fillcolor=\"$color\"];" >> "$dot_file"
+
+        # Process dependencies
+        while IFS= read -r dep; do
+            [[ -n "$dep" ]] && echo "    \"$dep\" -> \"$pkg\";" >> "$dot_file"
+        done < <(get_dependencies "$pkg")
+    done
+
+    # Close DOT file
+    echo "}" >> "$dot_file"
+}
+
+main() {
+    printf "Building dependency graph...\n"
+    build_dot
+    dot -Tpng assets/dependency-graph.dot -o assets/dependency-graph.png
+    printf "Done! Check assets/dependency-graph.png\n"
+}
+
+main

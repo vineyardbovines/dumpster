@@ -1,0 +1,6 @@
+digraph dependencies {
+    rankdir=LR;
+    bgcolor="black";
+    node [shape=box, style=filled, fontname="monospace"];
+    edge [color=white, arrowhead=dot, penwidth=2];
+}

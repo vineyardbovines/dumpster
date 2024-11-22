@@ -1,0 +1,22 @@
+{
+  "name": "@dumpster/config-typescript",
+  "version": "0.1.0",
+  "files": [
+    "native.json",
+    "node.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vineyardbovines/dumpster.git",
+    "directory": "packages/config-typescript"
+  },
+  "author": "Spence Pope <spencerfpope@gmail.com>",
+  "homepage": "https://github.com/vineyardbovines/dumpster#readme",
+  "bugs": {
+    "url": "https://github.com/vineyardbovines/dumpster/issues"
+  },
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf dist .turbo .*cache node_modules/.cache"
+  }
+}
